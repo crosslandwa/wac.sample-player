@@ -1,8 +1,7 @@
 'use strict'
 
 const EventEmitter = require('events'),
-    util = require('util'),
-    foreach = require('lodash.foreach');
+    util = require('util');
 
 function SamplePlayer(asset_url, audio_context) {
     EventEmitter.call(this);
@@ -86,7 +85,7 @@ function is_playing(player) {
 function update_playback_rate(player, audio_context, rate) {
     player._playback_rate = rate;
     var now = time_now(audio_context);
-    foreach(player._voices, (source) => {
+    player._voices.forEach((source) => {
         source.playbackRate.setValueAtTime(player._playback_rate, now);
     });
 }
