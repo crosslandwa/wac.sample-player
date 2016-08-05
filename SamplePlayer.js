@@ -7,7 +7,12 @@ function SamplePlayer(asset_url, audio_context) {
     EventEmitter.call(this);
     let player = this,
         _loaded = false,
-        _buffer;
+        _buffer,
+        _voices = [];
+
+    this.is_playing = function() {
+        return _voices.length > 0;
+    }
 
     this.play = function(velocity, cutoff_frequency) {
         if (!_loaded) return;
@@ -15,7 +20,7 @@ function SamplePlayer(asset_url, audio_context) {
         var now = time_now(audio_context),
             start_time = now;
 
-        if (is_playing(player)) {
+        if (player.is_playing()) {
             player._gain_node.gain.cancelScheduledValues(now);
             anchor(player._gain_node.gain, now);
             player._gain_node.gain.linearRampToValueAtTime(0, now + 0.01);
@@ -35,20 +40,23 @@ function SamplePlayer(asset_url, audio_context) {
         source.buffer = _buffer;
 
         source.addEventListener('ended', () => {
-            player._voices.shift();
-            if (!is_playing(player)) player.emit('stopped');
+            _voices.shift();
+            if (!player.is_playing()) player.emit('stopped');
         });
 
-        player._voices.push(source);
+        _voices.push(source);
         source.start(start_time);
         player.emit('started', velocity);
     }
 
     this.update_playback_rate = function(rate) {
-        update_playback_rate(player, audio_context, rate);
+        player._playback_rate = rate;
+        var now = time_now(audio_context);
+        _voices.forEach((source) => {
+            source.playbackRate.setValueAtTime(player._playback_rate, now);
+        });
     }
 
-    this._voices = [];
     this._playback_rate = 1;
     this._gain_node = audio_context.createGain();
     this._filter_node = audio_context.createBiquadFilter();
@@ -77,18 +85,6 @@ function play(player, audio_context, velocity, cutoff_frequency) {
 
 function anchor(audio_param, now) {
     audio_param.setValueAtTime(audio_param.value, now);
-}
-
-function is_playing(player) {
-    return player._voices.length > 0;
-}
-
-function update_playback_rate(player, audio_context, rate) {
-    player._playback_rate = rate;
-    var now = time_now(audio_context);
-    player._voices.forEach((source) => {
-        source.playbackRate.setValueAtTime(player._playback_rate, now);
-    });
 }
 
 function time_now(audio_context) {
