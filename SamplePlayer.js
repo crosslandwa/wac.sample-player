@@ -12,7 +12,7 @@ function SamplePlayer(asset_url, audio_context) {
         _playback_rate = 1,
         _gain_node = audio_context.createGain();
 
-    this._asset_url = asset_url;
+    this._assetUrl = asset_url;
 
     this.connect = _gain_node.connect.bind(_gain_node);
 
