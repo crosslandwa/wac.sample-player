@@ -5,17 +5,48 @@ const EventEmitter = require('events'),
 
 function SamplePlayer(asset_url, audio_context) {
     EventEmitter.call(this);
-    let player = this;
+    let player = this,
+        _loaded = false;
 
     this.play = function(velocity, cutoff_frequency) {
-        play(player, audio_context, velocity, cutoff_frequency);
+        if (!_loaded) return;
+
+        var now = time_now(audio_context),
+            start_time = now;
+
+        if (is_playing(player)) {
+            player._gain_node.gain.cancelScheduledValues(now);
+            anchor(player._gain_node.gain, now);
+            player._gain_node.gain.linearRampToValueAtTime(0, now + 0.01);
+            start_time = now + 0.01;
+            player.emit('stopped');
+        }
+
+        player._filter_node.frequency.value = cutoff_frequency > 30 ? cutoff_frequency : 30;
+        var source = audio_context.createBufferSource();
+
+        source.connect(player._filter_node);
+
+        player._gain_node.gain.setValueAtTime(0, start_time);
+        player._gain_node.gain.linearRampToValueAtTime(velocity / 127, start_time + 0.01);
+
+        source.playbackRate.setValueAtTime(player._playback_rate, start_time);
+        source.buffer = player._buffer;
+
+        source.addEventListener('ended', () => {
+            player._voices.shift();
+            if (!is_playing(player)) player.emit('stopped');
+        });
+
+        player._voices.push(source);
+        source.start(start_time);
+        player.emit('started', velocity);
     }
 
     this.update_playback_rate = function(rate) {
         update_playback_rate(player, audio_context, rate);
     }
 
-    this._loaded = false;
     this._voices = [];
     this._playback_rate = 1;
     this._gain_node = audio_context.createGain();
@@ -24,7 +55,7 @@ function SamplePlayer(asset_url, audio_context) {
     this._gain_node.connect(audio_context.destination);
     loadSample(asset_url, audio_context, (buffer) => {
         this._buffer = buffer;
-        this._loaded = true;
+        _loaded = true;
     });
 }
 util.inherits(SamplePlayer, EventEmitter);
@@ -40,38 +71,7 @@ function loadSample(asset_url, audio_context, done) {
 }
 
 function play(player, audio_context, velocity, cutoff_frequency) {
-    if (!player._loaded) return;
 
-    var now = time_now(audio_context),
-        start_time = now;
-
-    if (is_playing(player)) {
-        player._gain_node.gain.cancelScheduledValues(now);
-        anchor(player._gain_node.gain, now);
-        player._gain_node.gain.linearRampToValueAtTime(0, now + 0.01);
-        start_time = now + 0.01;
-        player.emit('stopped');
-    }
-
-    player._filter_node.frequency.value = cutoff_frequency > 30 ? cutoff_frequency : 30;
-    var source = audio_context.createBufferSource();
-
-    source.connect(player._filter_node);
-
-    player._gain_node.gain.setValueAtTime(0, start_time);
-    player._gain_node.gain.linearRampToValueAtTime(velocity / 127, start_time + 0.01);
-
-    source.playbackRate.setValueAtTime(player._playback_rate, start_time);
-    source.buffer = player._buffer;
-
-    source.addEventListener('ended', () => {
-        player._voices.shift();
-        if (!is_playing(player)) player.emit('stopped');
-    });
-
-    player._voices.push(source);
-    source.start(start_time);
-    player.emit('started', velocity);
 }
 
 function anchor(audio_param, now) {
