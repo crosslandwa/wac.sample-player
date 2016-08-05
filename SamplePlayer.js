@@ -18,7 +18,7 @@ function SamplePlayer(asset_url, audio_context) {
 
     this.disconnect = _gain_node.disconnect.bind(_gain_node);
 
-    this.to_master = function() {
+    this.toMaster = function() {
         player.disconnect();
         player.connect(audio_context.destination);
         return player;
