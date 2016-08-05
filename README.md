@@ -25,6 +25,3 @@ player.updatePlaybackRate(rate); // updates the playback rate (including current
 player.on('started', (gain) => { // playback started actions }); // gain is the object passed to the .play()
 player.on('stopped', () => { // playback stopped actions });
 ```
-
-## TODO
-- take a db(?) gain value instead of MIDI velocity
