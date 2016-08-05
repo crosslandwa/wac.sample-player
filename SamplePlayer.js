@@ -24,7 +24,7 @@ function SamplePlayer(asset_url, audio_context) {
         return player;
     }
 
-    this.is_playing = function() {
+    this.isPlaying = function() {
         return _voices.length > 0;
     }
 
@@ -35,7 +35,7 @@ function SamplePlayer(asset_url, audio_context) {
             start_time = now,
             _gain = (gain && (typeof gain.toAbsolute === 'function')) ? gain : { toAbsolute: function() { return 1 } };
 
-        if (player.is_playing()) {
+        if (player.isPlaying()) {
             _gain_node.gain.cancelScheduledValues(now);
             anchor(_gain_node.gain, now);
             _gain_node.gain.linearRampToValueAtTime(0, now + 0.01);
@@ -54,7 +54,7 @@ function SamplePlayer(asset_url, audio_context) {
 
         source.addEventListener('ended', () => {
             _voices.shift();
-            if (!player.is_playing()) player.emit('stopped');
+            if (!player.isPlaying()) player.emit('stopped');
         });
 
         _voices.push(source);
