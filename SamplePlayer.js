@@ -32,7 +32,8 @@ function SamplePlayer(asset_url, audio_context) {
         if (!_loaded) return;
 
         var now = time_now(audio_context),
-            start_time = now;
+            start_time = now,
+            _gain = (gain && (typeof gain.toAbsolute === 'function')) ? gain : { toAbsolute: function() { return 1 } };
 
         if (player.is_playing()) {
             _gain_node.gain.cancelScheduledValues(now);
@@ -43,11 +44,10 @@ function SamplePlayer(asset_url, audio_context) {
         }
 
         var source = audio_context.createBufferSource();
-
         source.connect(_gain_node);
 
         _gain_node.gain.setValueAtTime(0, start_time);
-        _gain_node.gain.linearRampToValueAtTime(gain.toAbsolute(), start_time + 0.01);
+        _gain_node.gain.linearRampToValueAtTime(_gain.toAbsolute(), start_time + 0.01);
 
         source.playbackRate.setValueAtTime(_playback_rate, start_time);
         source.buffer = _buffer;
@@ -59,7 +59,7 @@ function SamplePlayer(asset_url, audio_context) {
 
         _voices.push(source);
         source.start(start_time);
-        player.emit('started', gain);
+        player.emit('started', _gain);
     }
 
     this.update_playback_rate = function(rate) {

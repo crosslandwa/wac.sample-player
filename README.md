@@ -16,7 +16,8 @@ player.connect(destination, output, input); // as per https://developer.mozilla.
 player.disconnect(); // as per https://developer.mozilla.org/en-US/docs/Web/API/AudioNode/disconnect
 
 //-----INTERACT-----
-player.play(gain) // gain = an object that must have a .toAbsolute() method that returns a gain amount (typically 0 -> 1)
+player.play(); // play the sample
+player.play(gain) // play the sample at a given volume. gain = an object that must have a .toAbsolute() method returning a gain amount (typically 0 -> 1)
 player.is_playing(); // returns boolean
 player.update_playback_rate(rate); // updates the playback rate (including currently playing sound)
 
