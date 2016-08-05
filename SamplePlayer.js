@@ -62,7 +62,7 @@ function SamplePlayer(asset_url, audio_context) {
         player.emit('started', _gain);
     }
 
-    this.update_playback_rate = function(rate) {
+    this.updatePlaybackRate = function(rate) {
         _playback_rate = rate;
         var now = time_now(audio_context);
         _voices.forEach((source) => {
