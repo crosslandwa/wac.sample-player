@@ -8,7 +8,12 @@ function SamplePlayer(asset_url, audio_context) {
     let player = this,
         _loaded = false,
         _buffer,
-        _voices = [];
+        _voices = [],
+        _filter_node = audio_context.createBiquadFilter(),
+        _gain_node = audio_context.createGain();
+
+    _gain_node.connect(_filter_node);
+    _filter_node.connect(audio_context.destination);
 
     this.is_playing = function() {
         return _voices.length > 0;
@@ -21,20 +26,20 @@ function SamplePlayer(asset_url, audio_context) {
             start_time = now;
 
         if (player.is_playing()) {
-            player._gain_node.gain.cancelScheduledValues(now);
-            anchor(player._gain_node.gain, now);
-            player._gain_node.gain.linearRampToValueAtTime(0, now + 0.01);
+            _gain_node.gain.cancelScheduledValues(now);
+            anchor(_gain_node.gain, now);
+            _gain_node.gain.linearRampToValueAtTime(0, now + 0.01);
             start_time = now + 0.01;
             player.emit('stopped');
         }
 
-        player._filter_node.frequency.value = cutoff_frequency > 30 ? cutoff_frequency : 30;
+        _filter_node.frequency.value = cutoff_frequency > 30 ? cutoff_frequency : 30;
         var source = audio_context.createBufferSource();
 
-        source.connect(player._filter_node);
+        source.connect(_gain_node);
 
-        player._gain_node.gain.setValueAtTime(0, start_time);
-        player._gain_node.gain.linearRampToValueAtTime(velocity / 127, start_time + 0.01);
+        _gain_node.gain.setValueAtTime(0, start_time);
+        _gain_node.gain.linearRampToValueAtTime(velocity / 127, start_time + 0.01);
 
         source.playbackRate.setValueAtTime(player._playback_rate, start_time);
         source.buffer = _buffer;
@@ -58,10 +63,6 @@ function SamplePlayer(asset_url, audio_context) {
     }
 
     this._playback_rate = 1;
-    this._gain_node = audio_context.createGain();
-    this._filter_node = audio_context.createBiquadFilter();
-    this._filter_node.connect(this._gain_node);
-    this._gain_node.connect(audio_context.destination);
     loadSample(asset_url, audio_context, (buffer) => {
         _buffer = buffer;
         _loaded = true;
