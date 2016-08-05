@@ -6,7 +6,8 @@ const EventEmitter = require('events'),
 function SamplePlayer(asset_url, audio_context) {
     EventEmitter.call(this);
     let player = this,
-        _loaded = false;
+        _loaded = false,
+        _buffer;
 
     this.play = function(velocity, cutoff_frequency) {
         if (!_loaded) return;
@@ -31,7 +32,7 @@ function SamplePlayer(asset_url, audio_context) {
         player._gain_node.gain.linearRampToValueAtTime(velocity / 127, start_time + 0.01);
 
         source.playbackRate.setValueAtTime(player._playback_rate, start_time);
-        source.buffer = player._buffer;
+        source.buffer = _buffer;
 
         source.addEventListener('ended', () => {
             player._voices.shift();
@@ -54,7 +55,7 @@ function SamplePlayer(asset_url, audio_context) {
     this._filter_node.connect(this._gain_node);
     this._gain_node.connect(audio_context.destination);
     loadSample(asset_url, audio_context, (buffer) => {
-        this._buffer = buffer;
+        _buffer = buffer;
         _loaded = true;
     });
 }
