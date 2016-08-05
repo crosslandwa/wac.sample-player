@@ -16,12 +16,12 @@ player.connect(destination, output, input); // as per https://developer.mozilla.
 player.disconnect(); // as per https://developer.mozilla.org/en-US/docs/Web/API/AudioNode/disconnect
 
 //-----INTERACT-----
-player.play(velocity) // velocity = MIDI velocity in range 0-127 [THIS WILL CHANGE]. Retriggers if called whilst already playing
+player.play(gain) // gain = an object that must have a .toAbsolute() method that returns a gain amount (typically 0 -> 1)
 player.is_playing(); // returns boolean
 player.update_playback_rate(rate); // updates the playback rate (including currently playing sound)
 
 //-----OBSERVE-----
-player.on('started', (velocity) => { // playback started actions }); // velocity in range 0-127 [THIS WILL CHANGE]
+player.on('started', (gain) => { // playback started actions }); // gain is the object passed to the .play()
 player.on('stopped', () => { // playback stopped actions });
 ```
 

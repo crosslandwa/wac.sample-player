@@ -28,7 +28,7 @@ function SamplePlayer(asset_url, audio_context) {
         return _voices.length > 0;
     }
 
-    this.play = function(velocity) {
+    this.play = function(gain) {
         if (!_loaded) return;
 
         var now = time_now(audio_context),
@@ -47,7 +47,7 @@ function SamplePlayer(asset_url, audio_context) {
         source.connect(_gain_node);
 
         _gain_node.gain.setValueAtTime(0, start_time);
-        _gain_node.gain.linearRampToValueAtTime(velocity / 127, start_time + 0.01);
+        _gain_node.gain.linearRampToValueAtTime(gain.toAbsolute(), start_time + 0.01);
 
         source.playbackRate.setValueAtTime(_playback_rate, start_time);
         source.buffer = _buffer;
@@ -59,7 +59,7 @@ function SamplePlayer(asset_url, audio_context) {
 
         _voices.push(source);
         source.start(start_time);
-        player.emit('started', velocity);
+        player.emit('started', gain);
     }
 
     this.update_playback_rate = function(rate) {
