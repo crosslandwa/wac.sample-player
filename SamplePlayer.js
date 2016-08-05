@@ -28,7 +28,7 @@ function SamplePlayer(asset_url, audio_context) {
         return _voices.length > 0;
     }
 
-    this.play = function(velocity, cutoff_frequency) {
+    this.play = function(velocity) {
         if (!_loaded) return;
 
         var now = time_now(audio_context),
