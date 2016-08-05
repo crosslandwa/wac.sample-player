@@ -1,0 +1,30 @@
+{
+  "name": "wac.sample-player",
+  "version": "1.0.0",
+  "main": "SamplePlayer.js",
+  "description": "Load and playback audio samples with the Web Audio API",
+  "keywords": [
+    "web audio"
+  ],
+  "dependencies": {
+    "lodash.foreach": "^4.0.0",
+  },
+  "devDependencies": {
+    "babel-preset-es2015": "6.9.0"
+  },
+  "scripts": {},
+  "author": "https://github.com/crosslandwa",
+  "license": "MIT",
+  "browserify": {
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            "es2015"
+          ]
+        }
+      ]
+    ]
+  }
+}
