@@ -9,6 +9,7 @@ function SamplePlayer(asset_url, audio_context) {
         _loaded = false,
         _buffer,
         _voices = [],
+        _playback_rate = 1,
         _filter_node = audio_context.createBiquadFilter(),
         _gain_node = audio_context.createGain();
 
@@ -41,7 +42,7 @@ function SamplePlayer(asset_url, audio_context) {
         _gain_node.gain.setValueAtTime(0, start_time);
         _gain_node.gain.linearRampToValueAtTime(velocity / 127, start_time + 0.01);
 
-        source.playbackRate.setValueAtTime(player._playback_rate, start_time);
+        source.playbackRate.setValueAtTime(_playback_rate, start_time);
         source.buffer = _buffer;
 
         source.addEventListener('ended', () => {
@@ -55,14 +56,13 @@ function SamplePlayer(asset_url, audio_context) {
     }
 
     this.update_playback_rate = function(rate) {
-        player._playback_rate = rate;
+        _playback_rate = rate;
         var now = time_now(audio_context);
         _voices.forEach((source) => {
-            source.playbackRate.setValueAtTime(player._playback_rate, now);
+            source.playbackRate.setValueAtTime(_playback_rate, now);
         });
     }
 
-    this._playback_rate = 1;
     loadSample(asset_url, audio_context, (buffer) => {
         _buffer = buffer;
         _loaded = true;
@@ -78,10 +78,6 @@ function loadSample(asset_url, audio_context, done) {
         audio_context.decodeAudioData(request.response, done);
     }
     request.send();
-}
-
-function play(player, audio_context, velocity, cutoff_frequency) {
-
 }
 
 function anchor(audio_param, now) {
