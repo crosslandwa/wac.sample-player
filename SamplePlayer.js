@@ -10,11 +10,19 @@ function SamplePlayer(asset_url, audio_context) {
         _buffer,
         _voices = [],
         _playback_rate = 1,
-        _filter_node = audio_context.createBiquadFilter(),
         _gain_node = audio_context.createGain();
 
-    _gain_node.connect(_filter_node);
-    _filter_node.connect(audio_context.destination);
+    this._asset_url = asset_url;
+
+    this.connect = _gain_node.connect.bind(_gain_node);
+
+    this.disconnect = _gain_node.disconnect.bind(_gain_node);
+
+    this.to_master = function() {
+        player.disconnect();
+        player.connect(audio_context.destination);
+        return player;
+    }
 
     this.is_playing = function() {
         return _voices.length > 0;
@@ -34,7 +42,6 @@ function SamplePlayer(asset_url, audio_context) {
             player.emit('stopped');
         }
 
-        _filter_node.frequency.value = cutoff_frequency > 30 ? cutoff_frequency : 30;
         var source = audio_context.createBufferSource();
 
         source.connect(_gain_node);
