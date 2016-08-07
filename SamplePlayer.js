@@ -1,9 +1,10 @@
 'use strict'
 
 const EventEmitter = require('events'),
-    util = require('util');
+    util = require('util'),
+    unityGain = { toAbsolute: function() { return 1 } };
 
-function SamplePlayer(assetUrl, audioContext) {
+function SamplePlayer(assetUrl, audioContext, onLoad) {
     EventEmitter.call(this);
     let player = this,
         _loaded = false,
@@ -11,6 +12,11 @@ function SamplePlayer(assetUrl, audioContext) {
         _voices = [],
         _playbackRate = 1,
         _gainNode = audioContext.createGain();
+
+    let stoppedAction = function() {
+        _voices.shift();
+        if (!player.isPlaying()) player.emit('stopped');
+    }
 
     this._assetUrl = assetUrl;
 
@@ -24,22 +30,20 @@ function SamplePlayer(assetUrl, audioContext) {
         return player;
     }
 
-    this.isPlaying = function() {
-        return _voices.length > 0;
-    }
+    this.isPlaying = function() { return _voices.length > 0; }
 
     this.play = function(gain) {
-        if (!_loaded) return;
+        if (!_loaded) { console.log(assetUrl + ' not loaded yet...'); return; }
 
         var now = timeNow(audioContext),
             startTime = now,
-            _gain = (gain && (typeof gain.toAbsolute === 'function')) ? gain : { toAbsolute: function() { return 1 } };
+            _gain = (gain && (typeof gain.toAbsolute === 'function')) ? gain : unityGain;
 
         if (player.isPlaying()) {
             _gainNode.gain.cancelScheduledValues(now);
             anchor(_gainNode.gain, now);
-            _gainNode.gain.linearRampToValueAtTime(0, now + 0.01);
             startTime = now + 0.01;
+            _gainNode.gain.linearRampToValueAtTime(0, startTime);
             player.emit('stopped');
         }
 
@@ -47,15 +51,12 @@ function SamplePlayer(assetUrl, audioContext) {
         source.connect(_gainNode);
 
         _gainNode.gain.setValueAtTime(0, startTime);
-        _gainNode.gain.linearRampToValueAtTime(_gain.toAbsolute(), startTime + 0.01);
+        _gainNode.gain.linearRampToValueAtTime(_gain.toAbsolute(), startTime);
 
         source.playbackRate.setValueAtTime(_playbackRate, startTime);
         source.buffer = _buffer;
 
-        source.addEventListener('ended', () => {
-            _voices.shift();
-            if (!player.isPlaying()) player.emit('stopped');
-        });
+        source.addEventListener('ended', stoppedAction);
 
         _voices.push(source);
         source.start(startTime);
@@ -73,6 +74,9 @@ function SamplePlayer(assetUrl, audioContext) {
     loadSample(assetUrl, audioContext, (buffer) => {
         _buffer = buffer;
         _loaded = true;
+        if (typeof onLoad === 'function') {
+            onLoad(player);
+        }
     });
 }
 util.inherits(SamplePlayer, EventEmitter);
