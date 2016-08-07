@@ -45,12 +45,13 @@ function SamplePlayer(assetUrl, audioContext, onLoad) {
             startTime = now + 0.01;
             _gainNode.gain.linearRampToValueAtTime(0, startTime);
             player.emit('stopped');
+        } else {
+            _gainNode.gain.setValueAtTime(0, startTime);
         }
 
         var source = audioContext.createBufferSource();
         source.connect(_gainNode);
 
-        _gainNode.gain.setValueAtTime(0, startTime);
         _gainNode.gain.linearRampToValueAtTime(_gain.toAbsolute(), startTime);
 
         source.playbackRate.setValueAtTime(_playbackRate, startTime);

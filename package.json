@@ -1,6 +1,6 @@
 {
   "name": "wac.sample-player",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "main": "SamplePlayer.js",
   "description": "Load and playback audio samples with the Web Audio API",
   "keywords": [
