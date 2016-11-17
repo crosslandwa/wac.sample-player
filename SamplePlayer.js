@@ -17,7 +17,7 @@ function SamplePlayer(assetUrl, audioContext, onLoad) {
         return audioContext.currentTime;
     }
 
-    let stoppedAction = function() {
+    function stoppedAction() {
         _voices.shift();
         if (!player.isPlaying()) player.emit('stopped');
     }
@@ -44,7 +44,6 @@ function SamplePlayer(assetUrl, audioContext, onLoad) {
             _gain = (gain && (typeof gain.toAbsolute === 'function')) ? gain : unityGain;
 
         if (player.isPlaying()) {
-            _gainNode.gain.cancelScheduledValues(now);
             anchor(_gainNode.gain, now);
             startTime = now + 0.01;
             _gainNode.gain.linearRampToValueAtTime(0, startTime);
@@ -96,6 +95,7 @@ function loadSample(assetUrl, audioContext, done) {
 }
 
 function anchor(audioParam, now) {
+    audioParam.cancelScheduledValues(now);
     audioParam.setValueAtTime(audioParam.value, now);
 }
 
