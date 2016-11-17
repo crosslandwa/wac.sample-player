@@ -13,6 +13,10 @@ function SamplePlayer(assetUrl, audioContext, onLoad) {
         _playbackRate = 1,
         _gainNode = audioContext.createGain();
 
+    function timeNow() {
+        return audioContext.currentTime;
+    }
+
     let stoppedAction = function() {
         _voices.shift();
         if (!player.isPlaying()) player.emit('stopped');
@@ -35,7 +39,7 @@ function SamplePlayer(assetUrl, audioContext, onLoad) {
     this.play = function(gain) {
         if (!_loaded) { console.log(assetUrl + ' not loaded yet...'); return; }
 
-        var now = timeNow(audioContext),
+        var now = timeNow(),
             startTime = now,
             _gain = (gain && (typeof gain.toAbsolute === 'function')) ? gain : unityGain;
 
@@ -53,8 +57,7 @@ function SamplePlayer(assetUrl, audioContext, onLoad) {
         source.connect(_gainNode);
 
         _gainNode.gain.linearRampToValueAtTime(_gain.toAbsolute(), startTime);
-
-        source.playbackRate.setValueAtTime(_playbackRate, startTime);
+        source.playbackRate.value = _playbackRate
         source.buffer = _buffer;
 
         source.addEventListener('ended', stoppedAction);
@@ -66,7 +69,7 @@ function SamplePlayer(assetUrl, audioContext, onLoad) {
 
     this.updatePlaybackRate = function(rate) {
         _playbackRate = rate;
-        var now = timeNow(audioContext);
+        var now = timeNow();
         _voices.forEach((source) => {
             source.playbackRate.setValueAtTime(_playbackRate, now);
         });
@@ -94,10 +97,6 @@ function loadSample(assetUrl, audioContext, done) {
 
 function anchor(audioParam, now) {
     audioParam.setValueAtTime(audioParam.value, now);
-}
-
-function timeNow(audioContext) {
-    return audioContext.currentTime;
 }
 
 module.exports = SamplePlayer;
