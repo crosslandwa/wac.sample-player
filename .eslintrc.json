@@ -14,7 +14,8 @@
         "jasmine": true
     },
     "globals": {
-      "XMLHttpRequest": true
+      "XMLHttpRequest": true,
+      "FileReader": true
     },
     "extends": "standard"
 }

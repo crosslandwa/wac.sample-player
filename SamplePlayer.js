@@ -4,11 +4,9 @@ const EventEmitter = require('events')
 const util = require('util')
 const unityGain = { toAbsolute: function () { return 1 } }
 
-function SamplePlayer (assetUrl, audioContext, onLoad) {
+function SamplePlayer (buffer, audioContext) {
   EventEmitter.call(this)
   let player = this
-  let _loaded = false
-  let _buffer
   let _voices = []
   let _playbackRate = 1
   let _gainNode = audioContext.createGain()
@@ -21,8 +19,6 @@ function SamplePlayer (assetUrl, audioContext, onLoad) {
     _voices.shift()
     if (!player.isPlaying()) player.emit('stopped')
   }
-
-  this._assetUrl = assetUrl
 
   this.connect = _gainNode.connect.bind(_gainNode)
 
@@ -37,8 +33,6 @@ function SamplePlayer (assetUrl, audioContext, onLoad) {
   this.isPlaying = function () { return _voices.length > 0 }
 
   this.play = function (gain) {
-    if (!_loaded) { console.log(assetUrl + ' not loaded yet...'); return }
-
     let now = timeNow()
     let startTime = now
     let _gain = (gain && (typeof gain.toAbsolute === 'function')) ? gain : unityGain
@@ -57,7 +51,7 @@ function SamplePlayer (assetUrl, audioContext, onLoad) {
 
     _gainNode.gain.linearRampToValueAtTime(_gain.toAbsolute(), startTime)
     source.playbackRate.value = _playbackRate
-    source.buffer = _buffer
+    source.buffer = buffer
 
     source.addEventListener('ended', stoppedAction)
 
@@ -73,18 +67,18 @@ function SamplePlayer (assetUrl, audioContext, onLoad) {
       source.playbackRate.setValueAtTime(_playbackRate, now)
     })
   }
-
-  loadSample(assetUrl, audioContext, (buffer) => {
-    _buffer = buffer
-    _loaded = true
-    if (typeof onLoad === 'function') {
-      onLoad(player)
-    }
-  })
 }
 util.inherits(SamplePlayer, EventEmitter)
 
-function loadSample (assetUrl, audioContext, done) {
+function loadSampleFromFile (file, audioContext, done) {
+  let fileReader = new FileReader()
+  fileReader.onload = function (e) {
+    audioContext.decodeAudioData(e.target.result, done)
+  }
+  fileReader.readAsArrayBuffer(file)
+}
+
+function loadRemoteSample (assetUrl, audioContext, done) {
   var request = new XMLHttpRequest()
   request.open('GET', assetUrl, true)
   request.responseType = 'arraybuffer'
@@ -99,4 +93,19 @@ function anchor (audioParam, now) {
   audioParam.setValueAtTime(audioParam.value, now)
 }
 
-module.exports = SamplePlayer
+module.exports = {
+  forResource: function (url, audioContext) {
+    return new Promise((resolve, reject) => {
+      loadRemoteSample(url, audioContext, resolve)
+    }).then((buffer) => {
+      return new SamplePlayer(buffer, audioContext)
+    })
+  },
+  forFile: function (file, audioContext) {
+    return new Promise((resolve, reject) => {
+      loadSampleFromFile(file, audioContext, resolve)
+    }).then((buffer) => {
+      return new SamplePlayer(buffer, audioContext)
+    })
+  }
+}
