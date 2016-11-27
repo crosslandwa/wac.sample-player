@@ -5,7 +5,7 @@ const util = require('util')
 const unityGain = { toAbsolute: () => 1 }
 const SampleLoading = require('./src/SampleLoading.js')
 
-function SamplePlayer (buffer, audioContext) {
+function SamplePlayer (buffer, sampleFactory, audioContext) {
   EventEmitter.call(this)
   let player = this
   let _voices = []
@@ -70,21 +70,15 @@ function SamplePlayer (buffer, audioContext) {
   }
 
   function loadNewSample (load, source) {
-    return new Promise((resolve, reject) => {
-      load(source, audioContext, resolve)
-    }).then((newBuffer) => {
+    return new Promise(resolve => load(source, resolve)).then((newBuffer) => {
       buffer = newBuffer
       return player
     })
   }
 
-  this.loadFile = function (file) {
-    return loadNewSample(loadSampleFromFile, file)
-  }
+  this.loadFile = file => loadNewSample(sampleFactory.loadSampleFromFile, file)
 
-  this.loadResource = function (url) {
-    return loadNewSample(loadRemoteSample, url)
-  }
+  this.loadResource = url => loadNewSample(sampleFactory.loadRemoteSample, url)
 }
 util.inherits(SamplePlayer, EventEmitter)
 
@@ -97,11 +91,8 @@ function SamplePlayerFactory (audioContext) {
   let sampleFactory = SampleLoading(audioContext)
 
   function loadPlayer (load, source) {
-    return new Promise((resolve, reject) => {
-      load(source, resolve)
-    }).then((buffer) => {
-      return new SamplePlayer(buffer, audioContext)
-    })
+    return new Promise(resolve => load(source, resolve))
+      .then(buffer => new SamplePlayer(buffer, sampleFactory, audioContext))
   }
 
   this.forResource = url => loadPlayer(sampleFactory.loadRemoteSample, url)
