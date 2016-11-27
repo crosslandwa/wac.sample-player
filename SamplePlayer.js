@@ -2,7 +2,7 @@
 
 const EventEmitter = require('events')
 const util = require('util')
-const unityGain = { toAbsolute: function () { return 1 } }
+const unityGain = { toAbsolute: () => 1 }
 
 function SamplePlayer (buffer, audioContext) {
   EventEmitter.call(this)
