@@ -93,22 +93,20 @@ function anchor (audioParam, now) {
   audioParam.setValueAtTime(audioParam.value, now)
 }
 
-function loadPlayer (load, source, audioContext) {
-  return new Promise((resolve, reject) => {
-    load(source, resolve)
-  }).then((buffer) => {
-    return new SamplePlayer(buffer, audioContext)
-  })
-}
-
 function SamplePlayerFactory (audioContext) {
   let sampleFactory = SampleLoading(audioContext)
-  this.forResource = function (url) {
-    return loadPlayer(sampleFactory.loadRemoteSample, url, audioContext)
+
+  function loadPlayer (load, source) {
+    return new Promise((resolve, reject) => {
+      load(source, resolve)
+    }).then((buffer) => {
+      return new SamplePlayer(buffer, audioContext)
+    })
   }
-  this.forFile = function (file) {
-    return loadPlayer(sampleFactory.loadSampleFromFile, file, audioContext)
-  }
+
+  this.forResource = url => loadPlayer(sampleFactory.loadRemoteSample, url)
+
+  this.forFile = file => loadPlayer(sampleFactory.loadSampleFromFile, file)
 }
 
 module.exports = (audioContext) => new SamplePlayerFactory(audioContext)
