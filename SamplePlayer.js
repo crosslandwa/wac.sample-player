@@ -3,6 +3,7 @@
 const EventEmitter = require('events')
 const util = require('util')
 const unityGain = { toAbsolute: () => 1 }
+const SampleLoading = require('./src/SampleLoading.js')
 
 function SamplePlayer (buffer, audioContext) {
   EventEmitter.call(this)
@@ -68,7 +69,7 @@ function SamplePlayer (buffer, audioContext) {
     })
   }
 
-  function loadNewSample(load, source) {
+  function loadNewSample (load, source) {
     return new Promise((resolve, reject) => {
       load(source, audioContext, resolve)
     }).then((newBuffer) => {
@@ -87,42 +88,27 @@ function SamplePlayer (buffer, audioContext) {
 }
 util.inherits(SamplePlayer, EventEmitter)
 
-function loadSampleFromFile (file, audioContext, done) {
-  let fileReader = new FileReader()
-  fileReader.onload = function (e) {
-    audioContext.decodeAudioData(e.target.result, done)
-  }
-  fileReader.readAsArrayBuffer(file)
-}
-
-function loadRemoteSample (assetUrl, audioContext, done) {
-  var request = new XMLHttpRequest()
-  request.open('GET', assetUrl, true)
-  request.responseType = 'arraybuffer'
-  request.onload = function () {
-    audioContext.decodeAudioData(request.response, done)
-  }
-  request.send()
-}
-
 function anchor (audioParam, now) {
   audioParam.cancelScheduledValues(now)
   audioParam.setValueAtTime(audioParam.value, now)
 }
 
-function loadPlayer(load, source, audioContext) {
+function loadPlayer (load, source, audioContext) {
   return new Promise((resolve, reject) => {
-    load(source, audioContext, resolve)
+    load(source, resolve)
   }).then((buffer) => {
     return new SamplePlayer(buffer, audioContext)
   })
 }
 
-module.exports = {
-  forResource: function (url, audioContext) {
-    return loadPlayer(loadRemoteSample, url, audioContext)
-  },
-  forFile: function (file, audioContext) {
-    return loadPlayer(loadSampleFromFile, file, audioContext)
+function SamplePlayerFactory (audioContext) {
+  let sampleFactory = SampleLoading(audioContext)
+  this.forResource = function (url) {
+    return loadPlayer(sampleFactory.loadRemoteSample, url, audioContext)
+  }
+  this.forFile = function (file) {
+    return loadPlayer(sampleFactory.loadSampleFromFile, file, audioContext)
   }
 }
+
+module.exports = (audioContext) => new SamplePlayerFactory(audioContext)
