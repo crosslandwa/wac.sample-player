@@ -67,6 +67,23 @@ function SamplePlayer (buffer, audioContext) {
       source.playbackRate.setValueAtTime(_playbackRate, now)
     })
   }
+
+  function loadNewSample(load, source) {
+    return new Promise((resolve, reject) => {
+      load(source, audioContext, resolve)
+    }).then((newBuffer) => {
+      buffer = newBuffer
+      return player
+    })
+  }
+
+  this.loadFile = function (file) {
+    return loadNewSample(loadSampleFromFile, file)
+  }
+
+  this.loadResource = function (url) {
+    return loadNewSample(loadRemoteSample, url)
+  }
 }
 util.inherits(SamplePlayer, EventEmitter)
 
@@ -93,19 +110,19 @@ function anchor (audioParam, now) {
   audioParam.setValueAtTime(audioParam.value, now)
 }
 
+function loadPlayer(load, source, audioContext) {
+  return new Promise((resolve, reject) => {
+    load(source, audioContext, resolve)
+  }).then((buffer) => {
+    return new SamplePlayer(buffer, audioContext)
+  })
+}
+
 module.exports = {
   forResource: function (url, audioContext) {
-    return new Promise((resolve, reject) => {
-      loadRemoteSample(url, audioContext, resolve)
-    }).then((buffer) => {
-      return new SamplePlayer(buffer, audioContext)
-    })
+    return loadPlayer(loadRemoteSample, url, audioContext)
   },
   forFile: function (file, audioContext) {
-    return new Promise((resolve, reject) => {
-      loadSampleFromFile(file, audioContext, resolve)
-    }).then((buffer) => {
-      return new SamplePlayer(buffer, audioContext)
-    })
+    return loadPlayer(loadSampleFromFile, file, audioContext)
   }
 }
