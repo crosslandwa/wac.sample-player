@@ -19,7 +19,7 @@ PlayerFactory.forResource('http://path/to/sample.mp3') // load a sample for a UR
   player.play(); // play the sample
   player.play(gain) // play the sample at a given volume. gain = an object that must have a .toAbsolute() method returning a gain amount (typically 0 -> 1)
   player.isPlaying(); // returns boolean
-  player.updatePlaybackRate(rate); // updates the playback rate (including currently playing sound)
+  player.updatePlaybackRate(rate); // fluent, updates the playback rate (including currently playing sound) then returns the player
 
   //-----OBSERVE-----
   player.on('started', (gain) => { // playback started actions }); // gain is the object passed to the .play()
@@ -47,13 +47,22 @@ function loadNewAudioFile(e) {
 uploader.addEventListener('dragover', stopBubbledEvent, false)
 uploader.addEventListener('drop', loadNewAudioFile, false)
 ```
+## Manage your own buffers
+
+If you want to load a player from an AudioBuffer that you are managing
+
+```javascript
+PlayerFactory.withBuffer(buffer).then(player => { player.toMaster().play() })
+```
+
 
 ## Runtime sample loading
 
-A player's loaded sample can be changed at runtime, using either a URL or an uploaded File as a source
+A player's loaded sample can be changed at runtime, using either a URL, an uploaded File, or an AudioBuffer as a source
 
 ```javascript
-// both load functions are promise based
+// all load functions are promise based
 player.loadResource(url).then(player => player.play())
 player.loadFile(file).then(player => player.play())
+player.setBuffer(buffer).then(player => player.play())
 ```

@@ -67,6 +67,7 @@ function SamplePlayer (buffer, sampleFactory, audioContext) {
     _voices.forEach((source) => {
       source.playbackRate.setValueAtTime(_playbackRate, now)
     })
+    return player
   }
 
   function loadNewSample (load, source) {
@@ -79,6 +80,11 @@ function SamplePlayer (buffer, sampleFactory, audioContext) {
   this.loadFile = file => loadNewSample(sampleFactory.loadSampleFromFile, file)
 
   this.loadResource = url => loadNewSample(sampleFactory.loadRemoteSample, url)
+
+  this.setBuffer = buffer => loadNewSample(
+    (buffer, resolve) => resolve(buffer),
+    buffer
+  )
 }
 util.inherits(SamplePlayer, EventEmitter)
 
@@ -98,6 +104,11 @@ function SamplePlayerFactory (audioContext) {
   this.forResource = url => loadPlayer(sampleFactory.loadRemoteSample, url)
 
   this.forFile = file => loadPlayer(sampleFactory.loadSampleFromFile, file)
+
+  this.withBuffer = buffer => loadPlayer(
+    (buffer, resolve) => resolve(buffer),
+    buffer
+  )
 }
 
 module.exports = (audioContext) => new SamplePlayerFactory(audioContext)
